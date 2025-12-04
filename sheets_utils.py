@@ -1,16 +1,21 @@
-from streamlit_gsheets import GSheetsConnection
+import gspread
+from gspread_dataframe import set_with_dataframe
 import pandas as pd
 from datetime import datetime
 import streamlit as st
 
 # Google Sheets configuration
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1NFfol3Incp-80m4JYojoJ--yzQYY2IgWvWz5GiUcQGY/edit?usp=sharing"
+SHEET_KEY = "1NFfol3Incp-80m4JYojoJ--yzQYY2IgWvWz5GiUcQGY"
 
 def get_connection():
-    """Get Google Sheets connection."""
+    """Get Google Sheets connection using public access."""
     try:
-        conn = st.connection("gsheets", type=GSheetsConnection)
-        return conn
+        # Use anonymous access for public sheets
+        gc = gspread.auth.Client(auth=None)
+        gc.http_client.auth = None
+        sheet = gc.open_by_key(SHEET_KEY)
+        return sheet
     except Exception as e:
         print(f"Error connecting to Google Sheets: {e}")
         return None
@@ -18,20 +23,18 @@ def get_connection():
 def load_reservations():
     """Load reservations from Google Sheets."""
     try:
-        conn = get_connection()
-        if not conn:
+        sheet = get_connection()
+        if not sheet:
             return []
         
-        # Read from "Reservas" worksheet
-        df = conn.read(worksheet="Reservas", usecols=[0, 1, 2])
-        
-        if df.empty:
-            return []
+        # Get "Reservas" worksheet
+        worksheet = sheet.worksheet("Reservas")
+        data = worksheet.get_all_records()
         
         # Convert to format expected by app
         reservations = []
-        for _, row in df.iterrows():
-            if pd.notna(row.get('usuario')) and pd.notna(row.get('fecha')):
+        for row in data:
+            if row.get('usuario') and row.get('fecha'):
                 reservations.append({
                     'user': str(row['usuario']),
                     'date': str(row['fecha']),
@@ -45,11 +48,20 @@ def load_reservations():
 def save_reservations(reservations):
     """Save reservations to Google Sheets."""
     try:
-        conn = get_connection()
-        if not conn:
+        sheet = get_connection()
+        if not sheet:
             return False
         
-        # Convert to DataFrame
+        # Get or create worksheet
+        try:
+            worksheet = sheet.worksheet("Reservas")
+        except:
+            worksheet = sheet.add_worksheet(title="Reservas", rows=100, cols=10)
+        
+        # Clear existing data
+        worksheet.clear()
+        
+        # Prepare DataFrame
         data = []
         for res in reservations:
             data.append({
@@ -61,7 +73,7 @@ def save_reservations(reservations):
         df = pd.DataFrame(data)
         
         # Write to sheet
-        conn.update(worksheet="Reservas", data=df)
+        set_with_dataframe(worksheet, df, include_index=False, include_column_header=True)
         return True
     except Exception as e:
         print(f"Error saving to Sheets: {e}")
@@ -70,20 +82,18 @@ def save_reservations(reservations):
 def load_history():
     """Load history from Google Sheets."""
     try:
-        conn = get_connection()
-        if not conn:
+        sheet = get_connection()
+        if not sheet:
             return []
         
-        # Read from "Historial" worksheet
-        df = conn.read(worksheet="Historial", usecols=[0, 1, 2, 3, 4])
-        
-        if df.empty:
-            return []
+        # Get "Historial" worksheet
+        worksheet = sheet.worksheet("Historial")
+        data = worksheet.get_all_records()
         
         # Convert to format expected by app
         history = []
-        for _, row in df.iterrows():
-            if pd.notna(row.get('timestamp')):
+        for row in data:
+            if row.get('timestamp'):
                 history.append({
                     'timestamp': str(row['timestamp']),
                     'action': str(row.get('accion', '')),
@@ -99,11 +109,20 @@ def load_history():
 def save_history(history):
     """Save history to Google Sheets."""
     try:
-        conn = get_connection()
-        if not conn:
+        sheet = get_connection()
+        if not sheet:
             return False
         
-        # Convert to DataFrame
+        # Get or create worksheet
+        try:
+            worksheet = sheet.worksheet("Historial")
+        except:
+            worksheet = sheet.add_worksheet(title="Historial", rows=1000, cols=10)
+        
+        # Clear existing data
+        worksheet.clear()
+        
+        # Prepare DataFrame
         data = []
         for entry in history:
             data.append({
@@ -117,7 +136,7 @@ def save_history(history):
         df = pd.DataFrame(data)
         
         # Write to sheet
-        conn.update(worksheet="Historial", data=df)
+        set_with_dataframe(worksheet, df, include_index=False, include_column_header=True)
         return True
     except Exception as e:
         print(f"Error saving history to Sheets: {e}")
