@@ -4,7 +4,7 @@ from datetime import datetime
 import streamlit as st
 
 # Google Sheets configuration
-SHEET_URL = "https://docs.google.com/spreadsheets/d/1NFfol3Incp-80m4JYojoJ--yzQYY2IgWvWz5GiUcQGY/edit?gid=897113735#gid=897113735"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1NFfol3Incp-80m4JYojoJ--yzQYY2IgWvWz5GiUcQGY/edit?usp=sharing"
 
 def get_connection():
     """Get Google Sheets connection."""
