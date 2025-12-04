@@ -91,6 +91,9 @@ with tab1:
         
         # Password protection
         password_input = st.text_input("Contraseña para confirmar", type="password", key="reserve_password")
+        
+        # Email notification option
+        send_email = st.checkbox("📧 Enviar notificación por email", value=True, key="send_email_reserve")
 
         if st.button("Confirmar Reserva", type="primary", use_container_width=True):
             if password_input != OPERATION_PASSWORD:
@@ -101,21 +104,23 @@ with tab1:
                     st.success(f"✅ {message}")
                     st.balloons()
                     # Try to send email notification (optional)
-                    try:
-                        email_notifications.send_reservation_email(
-                            selected_user, 
-                            USERS[selected_user], 
-                            selected_date.isoformat(), 
-                            "created"
-                        )
-                        email_notifications.send_group_notification(
-                            USERS, 
-                            selected_date.isoformat(), 
-                            selected_user, 
-                            "created"
-                        )
-                    except:
-                        pass  # Email is optional, don't break if it fails
+                    if send_email:
+                        try:
+                            email_notifications.send_reservation_email(
+                                selected_user, 
+                                USERS[selected_user], 
+                                selected_date.isoformat(), 
+                                "created"
+                            )
+                            email_notifications.send_group_notification(
+                                USERS, 
+                                selected_date.isoformat(), 
+                                selected_user, 
+                                "created"
+                            )
+                            st.info("📧 Email enviado al grupo")
+                        except Exception as e:
+                            st.warning(f"⚠️ No se pudo enviar email: {e}")
                 else:
                     st.error(f"❌ {message}")
     
@@ -123,6 +128,9 @@ with tab1:
     with col_right:
         st.header("Mis Reservas Activas")
         filter_user = st.selectbox("Ver reservas de:", USER_NAMES, key="filter_user")
+        
+        # Email notification option for cancellations
+        send_cancel_email = st.checkbox("📧 Enviar email al cancelar", value=True, key="send_email_cancel")
         
         all_reservations = utils.get_all_reservations()
         # Filter for selected user and future dates (optional, but good for "Active")
@@ -157,21 +165,23 @@ with tab1:
                                 if success:
                                     st.success(msg)
                                     # Try to send cancellation email (optional)
-                                    try:
-                                        email_notifications.send_reservation_email(
-                                            res['user'], 
-                                            USERS[res['user']], 
-                                            res['date'], 
-                                            "cancelled"
-                                        )
-                                        email_notifications.send_group_notification(
-                                            USERS, 
-                                            res['date'], 
-                                            res['user'], 
-                                            "cancelled"
-                                        )
-                                    except:
-                                        pass  # Email is optional
+                                    if send_cancel_email:
+                                        try:
+                                            email_notifications.send_reservation_email(
+                                                res['user'], 
+                                                USERS[res['user']], 
+                                                res['date'], 
+                                                "cancelled"
+                                            )
+                                            email_notifications.send_group_notification(
+                                                USERS, 
+                                                res['date'], 
+                                                res['user'], 
+                                                "cancelled"
+                                            )
+                                            st.info("📧 Email de cancelación enviado")
+                                        except Exception as e:
+                                            st.warning(f"⚠️ No se pudo enviar email: {e}")
                                     st.rerun()
                                 else:
                                     st.error(msg)
