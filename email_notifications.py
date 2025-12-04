@@ -12,15 +12,15 @@ from datetime import datetime
 SMTP_SERVER = "smtp.gmail.com"  # Change if using different provider
 SMTP_PORT = 587
 
-# Use Streamlit secrets in production, fallback to hardcoded for local
+# Use Streamlit secrets in production, fallback to empty for local
 try:
     import streamlit as st
     SENDER_EMAIL = st.secrets["SENDER_EMAIL"]
     SENDER_PASSWORD = st.secrets["SENDER_PASSWORD"]
 except:
-    # Fallback for local development
-    SENDER_EMAIL = "rehabilitados2025@gmail.com"
-    SENDER_PASSWORD = "Uribeparaco2025"
+    # For local development, set these manually or use Streamlit secrets
+    SENDER_EMAIL = ""  # Set your email here for local testing
+    SENDER_PASSWORD = ""  # Set your password here for local testing
 
 def send_reservation_email(user_name, user_email, reservation_date, action="created"):
     """
