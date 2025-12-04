@@ -1,45 +1,41 @@
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 from datetime import datetime
+import streamlit as st
 
 # Google Sheets configuration
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1NFfol3Incp-80m4JYojoJ--yzQYY2IgWvWz5GiUcQGY/edit?gid=897113735#gid=897113735"
-RESERVATIONS_SHEET = "Reservas"
-HISTORY_SHEET = "Historial"
 
-def get_google_sheet():
-    """
-    Connect to Google Sheets using public URL.
-    """
+def get_connection():
+    """Get Google Sheets connection."""
     try:
-        import streamlit as st
-        # For Streamlit Cloud, we'll use st.connection
-        # For now, using public sheet access
-        gc = gspread.oauth()
-        sheet = gc.open_by_url(SHEET_URL)
-        return sheet
-    except:
-        # Fallback: try to open as public sheet
-        gc = gspread.service_account()
-        sheet = gc.open_by_url(SHEET_URL)
-        return sheet
+        conn = st.connection("gsheets", type=GSheetsConnection)
+        return conn
+    except Exception as e:
+        print(f"Error connecting to Google Sheets: {e}")
+        return None
 
 def load_reservations():
     """Load reservations from Google Sheets."""
     try:
-        sheet = get_google_sheet()
-        worksheet = sheet.worksheet(RESERVATIONS_SHEET)
-        data = worksheet.get_all_records()
+        conn = get_connection()
+        if not conn:
+            return []
+        
+        # Read from "Reservas" worksheet
+        df = conn.read(worksheet="Reservas", usecols=[0, 1, 2])
+        
+        if df.empty:
+            return []
         
         # Convert to format expected by app
         reservations = []
-        for row in data:
-            if row.get('usuario') and row.get('fecha'):
+        for _, row in df.iterrows():
+            if pd.notna(row.get('usuario')) and pd.notna(row.get('fecha')):
                 reservations.append({
-                    'user': row['usuario'],
-                    'date': row['fecha'],
-                    'created_at': row.get('creado', '')
+                    'user': str(row['usuario']),
+                    'date': str(row['fecha']),
+                    'created_at': str(row.get('creado', ''))
                 })
         return reservations
     except Exception as e:
@@ -49,28 +45,23 @@ def load_reservations():
 def save_reservations(reservations):
     """Save reservations to Google Sheets."""
     try:
-        sheet = get_google_sheet()
+        conn = get_connection()
+        if not conn:
+            return False
         
-        # Get or create worksheet
-        try:
-            worksheet = sheet.worksheet(RESERVATIONS_SHEET)
-            worksheet.clear()
-        except:
-            worksheet = sheet.add_worksheet(title=RESERVATIONS_SHEET, rows=100, cols=10)
-        
-        # Prepare data
-        headers = ['usuario', 'fecha', 'creado']
-        data = [headers]
-        
+        # Convert to DataFrame
+        data = []
         for res in reservations:
-            data.append([
-                res['user'],
-                res['date'],
-                res.get('created_at', '')
-            ])
+            data.append({
+                'usuario': res['user'],
+                'fecha': res['date'],
+                'creado': res.get('created_at', '')
+            })
+        
+        df = pd.DataFrame(data)
         
         # Write to sheet
-        worksheet.update('A1', data)
+        conn.update(worksheet="Reservas", data=df)
         return True
     except Exception as e:
         print(f"Error saving to Sheets: {e}")
@@ -79,20 +70,26 @@ def save_reservations(reservations):
 def load_history():
     """Load history from Google Sheets."""
     try:
-        sheet = get_google_sheet()
-        worksheet = sheet.worksheet(HISTORY_SHEET)
-        data = worksheet.get_all_records()
+        conn = get_connection()
+        if not conn:
+            return []
+        
+        # Read from "Historial" worksheet
+        df = conn.read(worksheet="Historial", usecols=[0, 1, 2, 3, 4])
+        
+        if df.empty:
+            return []
         
         # Convert to format expected by app
         history = []
-        for row in data:
-            if row.get('timestamp'):
+        for _, row in df.iterrows():
+            if pd.notna(row.get('timestamp')):
                 history.append({
-                    'timestamp': row['timestamp'],
-                    'action': row.get('accion', ''),
-                    'user': row.get('usuario', ''),
-                    'date': row.get('fecha', ''),
-                    'details': row.get('detalles', '')
+                    'timestamp': str(row['timestamp']),
+                    'action': str(row.get('accion', '')),
+                    'user': str(row.get('usuario', '')),
+                    'date': str(row.get('fecha', '')),
+                    'details': str(row.get('detalles', ''))
                 })
         return history
     except Exception as e:
@@ -102,30 +99,25 @@ def load_history():
 def save_history(history):
     """Save history to Google Sheets."""
     try:
-        sheet = get_google_sheet()
+        conn = get_connection()
+        if not conn:
+            return False
         
-        # Get or create worksheet
-        try:
-            worksheet = sheet.worksheet(HISTORY_SHEET)
-            worksheet.clear()
-        except:
-            worksheet = sheet.add_worksheet(title=HISTORY_SHEET, rows=1000, cols=10)
-        
-        # Prepare data
-        headers = ['timestamp', 'accion', 'usuario', 'fecha', 'detalles']
-        data = [headers]
-        
+        # Convert to DataFrame
+        data = []
         for entry in history:
-            data.append([
-                entry.get('timestamp', ''),
-                entry.get('action', ''),
-                entry.get('user', ''),
-                entry.get('date', ''),
-                entry.get('details', '')
-            ])
+            data.append({
+                'timestamp': entry.get('timestamp', ''),
+                'accion': entry.get('action', ''),
+                'usuario': entry.get('user', ''),
+                'fecha': entry.get('date', ''),
+                'detalles': entry.get('details', '')
+            })
+        
+        df = pd.DataFrame(data)
         
         # Write to sheet
-        worksheet.update('A1', data)
+        conn.update(worksheet="Historial", data=df)
         return True
     except Exception as e:
         print(f"Error saving history to Sheets: {e}")
