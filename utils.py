@@ -2,25 +2,10 @@ import json
 import os
 from datetime import datetime, date
 
-# Try to use Google Sheets, fallback to JSON
-USE_SHEETS = False
-try:
-    import sheets_utils
-    USE_SHEETS = True
-    print("✅ Using Google Sheets for storage")
-except Exception as e:
-    print(f"⚠️ Google Sheets not available, using JSON: {e}")
-    USE_SHEETS = False
-
-# JSON file paths (fallback)
 DATA_FILE = os.path.join(os.path.dirname(__file__), 'reservations.json')
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), 'history.json')
 
 def load_reservations():
-    if USE_SHEETS:
-        return sheets_utils.load_reservations()
-    
-    # Fallback to JSON
     if not os.path.exists(DATA_FILE):
         return []
     try:
@@ -30,18 +15,10 @@ def load_reservations():
         return []
 
 def save_reservations(reservations):
-    if USE_SHEETS:
-        return sheets_utils.save_reservations(reservations)
-    
-    # Fallback to JSON
     with open(DATA_FILE, 'w') as f:
         json.dump(reservations, f, indent=4)
 
 def load_history():
-    if USE_SHEETS:
-        return sheets_utils.load_history()
-    
-    # Fallback to JSON
     if not os.path.exists(HISTORY_FILE):
         return []
     try:
@@ -51,10 +28,6 @@ def load_history():
         return []
 
 def save_history(history):
-    if USE_SHEETS:
-        return sheets_utils.save_history(history)
-    
-    # Fallback to JSON
     with open(HISTORY_FILE, 'w') as f:
         json.dump(history, f, indent=4)
 
@@ -68,10 +41,6 @@ def add_history_entry(action, user_name, reservation_date, details=""):
         reservation_date: Date of reservation
         details: Additional details (optional)
     """
-    if USE_SHEETS:
-        return sheets_utils.add_history_entry(action, user_name, reservation_date, details)
-    
-    # Fallback to JSON
     history = load_history()
     entry = {
         "timestamp": datetime.now().isoformat(),
