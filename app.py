@@ -136,54 +136,8 @@ USER_NAMES = list(USERS.keys())
 # Create two main columns
 main_col1, main_col2 = st.columns([1, 1])
 
-# --- LEFT COLUMN: CALENDAR & STATUS ---
+# --- LEFT COLUMN: ACTIONS (RESERVE & MY RESERVATIONS) ---
 with main_col1:
-    st.header("📆 Calendario de Reservas")
-    
-    reservations = utils.get_all_reservations()
-    
-    # Custom Calendar Visualization
-    # Create a dataframe for the calendar
-    if reservations:
-        df = pd.DataFrame(reservations)
-        df['date'] = pd.to_datetime(df['date']).dt.date
-        df = df.sort_values('date')
-        
-        # Highlight today
-        today = date.today()
-        
-        # Display as a styled table
-        st.markdown("### Próximas Reservas")
-        
-        # Filter for future reservations only
-        future_reservations = df[df['date'] >= today]
-        
-        if not future_reservations.empty:
-            st.dataframe(
-                future_reservations[['date', 'user']].rename(columns={'date': 'Fecha', 'user': 'Reservado por'}),
-                use_container_width=True,
-                hide_index=True,
-                height=400
-            )
-        else:
-            st.info("No hay reservas futuras.")
-    else:
-        st.info("No hay reservas registradas.")
-
-    # Rules Expander
-    with st.expander("📜 Ver Reglamento"):
-        st.markdown("""
-        ### Reglamento de Uso
-        1. **Duración:** Las reservas son por 24 horas (10:00 AM a 10:00 AM del día siguiente).
-        2. **Límite:** Solo puedes tener **una reserva activa** a la vez.
-        3. **Responsable:** Quien reserva es responsable del barril y sus accesorios.
-        4. **Limpieza:** El barril debe entregarse limpio y seco.
-        5. **Inventario:** Verificar el inventario al recibir y entregar.
-        6. **Uso:** Prohibido prestar el barril a terceros fuera del grupo.
-        """)
-
-# --- RIGHT COLUMN: ACTIONS (RESERVE & MY RESERVATIONS) ---
-with main_col2:
     # SECTION 1: MAKE RESERVATION
     st.markdown("### 📝 Hacer una Reserva")
     with st.container(border=True):
@@ -278,6 +232,52 @@ with main_col2:
                         else:
                             st.error(msg)
                 st.divider()
+
+# --- RIGHT COLUMN: CALENDAR & STATUS ---
+with main_col2:
+    st.header("📆 Calendario de Reservas")
+    
+    reservations = utils.get_all_reservations()
+    
+    # Custom Calendar Visualization
+    # Create a dataframe for the calendar
+    if reservations:
+        df = pd.DataFrame(reservations)
+        df['date'] = pd.to_datetime(df['date']).dt.date
+        df = df.sort_values('date')
+        
+        # Highlight today
+        today = date.today()
+        
+        # Display as a styled table
+        st.markdown("### Próximas Reservas")
+        
+        # Filter for future reservations only
+        future_reservations = df[df['date'] >= today]
+        
+        if not future_reservations.empty:
+            st.dataframe(
+                future_reservations[['date', 'user']].rename(columns={'date': 'Fecha', 'user': 'Reservado por'}),
+                use_container_width=True,
+                hide_index=True,
+                height=400
+            )
+        else:
+            st.info("No hay reservas futuras.")
+    else:
+        st.info("No hay reservas registradas.")
+
+    # Rules Expander
+    with st.expander("📜 Ver Reglamento"):
+        st.markdown("""
+        ### Reglamento de Uso
+        1. **Duración:** Las reservas son por 24 horas (10:00 AM a 10:00 AM del día siguiente).
+        2. **Límite:** Solo puedes tener **una reserva activa** a la vez.
+        3. **Responsable:** Quien reserva es responsable del barril y sus accesorios.
+        4. **Limpieza:** El barril debe entregarse limpio y seco.
+        5. **Inventario:** Verificar el inventario al recibir y entregar.
+        6. **Uso:** Prohibido prestar el barril a terceros fuera del grupo.
+        """)
 
 # --- HISTORIAL (EXPANDER AT BOTTOM) ---
 with st.expander("📋 Ver Historial de Cambios"):
