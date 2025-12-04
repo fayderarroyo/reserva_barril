@@ -12,16 +12,9 @@ OPERATION_PASSWORD = "pellejo"
 # Page Config
 st.set_page_config(page_title="Reserva Barril Los Rehabilitados", page_icon="🍖", layout="wide")
 
-# Custom CSS for background and styling
+# Custom CSS for styling
 st.markdown("""
 <style>
-    .main {
-        background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
-                    url('assets/background.png');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
-    }
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
     }
@@ -33,26 +26,26 @@ st.markdown("""
     h1 {
         text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
+    .footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: #0E1117;
+        color: #888;
+        text-align: center;
+        padding: 10px;
+        font-size: 12px;
+        border-top: 1px solid #333;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# Title with collage
-col_title1, col_title2 = st.columns([2, 1])
-with col_title1:
-    st.title("🍖 Reserva Barril 'Los Rehabilitados'")
-    st.markdown("### Sistema de Gestión de Reservas")
-with col_title2:
-    # Display selected images
-    if os.path.exists('assets/new_hero.png'):
-        st.image('assets/new_hero.png', use_container_width=True)
-    
-    col_imgs = st.columns(2)
-    with col_imgs[0]:
-        if os.path.exists('assets/hero.png'):
-            st.image('assets/hero.png', use_container_width=True)
-    with col_imgs[1]:
-        if os.path.exists('assets/collage_2.png'):
-            st.image('assets/collage_2.png', use_container_width=True)
+# Title with Icons
+st.markdown("<h1 style='text-align: center;'>🔥 🥩 🍖 🥓 🔥</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center;'>Reserva Barril 'Los Rehabilitados'</h1>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align: center;'>Sistema de Gestión de Reservas</h3>", unsafe_allow_html=True)
+st.divider()
 
 # Users List with emails
 USERS = {
@@ -285,5 +278,12 @@ with st.expander("📋 Ver Historial de Cambios"):
     else:
         st.info("No hay historial disponible.")
         
-# (Tabs removed in favor of unified layout)
+
+# Footer
+st.markdown("""
+<div class="footer">
+    <p>© 2025 Fayder Arroyo — Data & BI · Innovación Tecnológica</p>
+    <p>Desarrollado con pasión por la analítica y la tecnología.</p>
+</div>
+""", unsafe_allow_html=True)
 
