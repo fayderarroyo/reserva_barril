@@ -59,6 +59,7 @@ with col_title2:
             st.image('assets/collage_8.png', use_column_width=True)
 
 # Users List with emails
+# Users List with emails
 USERS = {
     "Daniel Sierra": "dmsierra10@gmail.com",
     "Shirly Madiedo": "shirlymadiedo@gmail.com",
@@ -68,6 +69,65 @@ USERS = {
     "Lina Pertuz": "lpertuz17@gmail.com",
     "Kevin": "kevin9624@outlook.com"
 }
+
+# Default password for everyone (can be changed later)
+DEFAULT_PASSWORD = "1234"
+
+# Initialize session state
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
+if 'username' not in st.session_state:
+    st.session_state['username'] = None
+
+def login():
+    st.markdown("## 🔐 Iniciar Sesión")
+    
+    # Login form
+    with st.form("login_form"):
+        username = st.selectbox("Selecciona tu usuario", list(USERS.keys()))
+        password = st.text_input("Contraseña", type="password")
+        submit = st.form_submit_button("Entrar")
+        
+        if submit:
+            # Check password (using secrets if available, else default)
+            # In a real app, we would store hashed passwords
+            # For now, we check against a simple rule or secrets
+            
+            valid_password = False
+            
+            # Check if user has specific password in secrets
+            if "passwords" in st.secrets and username in st.secrets["passwords"]:
+                if password == st.secrets["passwords"][username]:
+                    valid_password = True
+            # Fallback to default password
+            elif password == DEFAULT_PASSWORD:
+                valid_password = True
+                
+            if valid_password:
+                st.session_state['logged_in'] = True
+                st.session_state['username'] = username
+                st.success("✅ Login exitoso!")
+                st.rerun()
+            else:
+                st.error("❌ Contraseña incorrecta")
+
+def logout():
+    st.session_state['logged_in'] = False
+    st.session_state['username'] = None
+    st.rerun()
+
+# Main App Logic
+if not st.session_state['logged_in']:
+    login()
+    st.stop()  # Stop execution here if not logged in
+
+# --- APP CONTENT (Only visible if logged in) ---
+
+# Sidebar with user info
+with st.sidebar:
+    st.write(f"👤 **Usuario:** {st.session_state['username']}")
+    if st.button("cerrar sesión"):
+        logout()
 
 USER_NAMES = list(USERS.keys())
 
@@ -85,57 +145,56 @@ with tab1:
         
         col1, col2 = st.columns(2)
         with col1:
-            selected_user = st.selectbox("Selecciona tu nombre", USER_NAMES)
+            # Auto-select logged in user
+            st.info(f"👤 Reservando como: **{st.session_state['username']}**")
+            selected_user = st.session_state['username']
         with col2:
             # Min date is today
             selected_date = st.date_input("Selecciona la fecha", min_value=date.today())
-        
-        # Password protection
-        password_input = st.text_input("Contraseña para confirmar", type="password", key="reserve_password")
         
         # Email notification option
         send_email = st.checkbox("📧 Enviar notificación por email", value=True, key="send_email_reserve")
 
         if st.button("Confirmar Reserva", type="primary", use_container_width=True):
-            if password_input != OPERATION_PASSWORD:
-                st.error("❌ Contraseña incorrecta")
+            # No password needed, user is logged in
+            success, message = utils.add_reservation(selected_user, selected_date)
+            if success:
+                st.success(f"✅ {message}")
+                st.balloons()
+                # Try to send email notification (optional)
+                if send_email:
+                    try:
+                        email_notifications.send_reservation_email(
+                            selected_user, 
+                            USERS[selected_user], 
+                            selected_date.isoformat(), 
+                            "created"
+                        )
+                        email_notifications.send_group_notification(
+                            USERS, 
+                            selected_date.isoformat(), 
+                            selected_user, 
+                            "created"
+                        )
+                        st.info("📧 Email enviado al grupo")
+                    except Exception as e:
+                        st.warning(f"⚠️ No se pudo enviar email: {e}")
             else:
-                success, message = utils.add_reservation(selected_user, selected_date)
-                if success:
-                    st.success(f"✅ {message}")
-                    st.balloons()
-                    # Try to send email notification (optional)
-                    if send_email:
-                        try:
-                            email_notifications.send_reservation_email(
-                                selected_user, 
-                                USERS[selected_user], 
-                                selected_date.isoformat(), 
-                                "created"
-                            )
-                            email_notifications.send_group_notification(
-                                USERS, 
-                                selected_date.isoformat(), 
-                                selected_user, 
-                                "created"
-                            )
-                            st.info("📧 Email enviado al grupo")
-                        except Exception as e:
-                            st.warning(f"⚠️ No se pudo enviar email: {e}")
-                else:
-                    st.error(f"❌ {message}")
+                st.error(f"❌ {message}")
     
     # RIGHT COLUMN: MIS RESERVAS
     with col_right:
         st.header("Mis Reservas Activas")
-        filter_user = st.selectbox("Ver reservas de:", USER_NAMES, key="filter_user")
+        
+        # Show only logged in user's reservations by default
+        current_user = st.session_state['username']
         
         # Email notification option for cancellations
         send_cancel_email = st.checkbox("📧 Enviar email al cancelar", value=True, key="send_email_cancel")
         
         all_reservations = utils.get_all_reservations()
-        # Filter for selected user and future dates (optional, but good for "Active")
-        user_reservations = [r for r in all_reservations if r['user'] == filter_user]
+        # Filter for current user
+        user_reservations = [r for r in all_reservations if r['user'] == current_user]
         
         # Sort by date
         user_reservations.sort(key=lambda x: x['date'])
@@ -145,47 +204,37 @@ with tab1:
         else:
             for res in user_reservations:
                 with st.container():
-                    col_res1, col_res2, col_res3 = st.columns([3, 2, 1])
+                    col_res1, col_res2 = st.columns([3, 1])
                     with col_res1:
                         st.write(f"📅 **Fecha:** {res['date']}")
                     with col_res2:
-                        # Password for cancellation
-                        cancel_password = st.text_input(
-                            "Contraseña", 
-                            type="password", 
-                            key=f"pwd_{res['date']}_{res['user']}",
-                            label_visibility="collapsed"
-                        )
-                    with col_res3:
                         # Unique key for button using date and user
                         if st.button("Cancelar", key=f"cancel_{res['date']}_{res['user']}"):
-                            if cancel_password != OPERATION_PASSWORD:
-                                st.error("❌ Contraseña incorrecta")
+                            # No password needed
+                            success, msg = utils.cancel_reservation(res['user'], res['date'])
+                            if success:
+                                st.success(msg)
+                                # Try to send cancellation email (optional)
+                                if send_cancel_email:
+                                    try:
+                                        email_notifications.send_reservation_email(
+                                            res['user'], 
+                                            USERS[res['user']], 
+                                            res['date'], 
+                                            "cancelled"
+                                        )
+                                        email_notifications.send_group_notification(
+                                            USERS, 
+                                            res['date'], 
+                                            res['user'], 
+                                            "cancelled"
+                                        )
+                                        st.info("📧 Email de cancelación enviado")
+                                    except Exception as e:
+                                        st.warning(f"⚠️ No se pudo enviar email: {e}")
+                                st.rerun()
                             else:
-                                success, msg = utils.cancel_reservation(res['user'], res['date'])
-                                if success:
-                                    st.success(msg)
-                                    # Try to send cancellation email (optional)
-                                    if send_cancel_email:
-                                        try:
-                                            email_notifications.send_reservation_email(
-                                                res['user'], 
-                                                USERS[res['user']], 
-                                                res['date'], 
-                                                "cancelled"
-                                            )
-                                            email_notifications.send_group_notification(
-                                                USERS, 
-                                                res['date'], 
-                                                res['user'], 
-                                                "cancelled"
-                                            )
-                                            st.info("📧 Email de cancelación enviado")
-                                        except Exception as e:
-                                            st.warning(f"⚠️ No se pudo enviar email: {e}")
-                                    st.rerun()
-                                else:
-                                    st.error(msg)
+                                st.error(msg)
 
 # --- TAB 2: CALENDARIO ---
 with tab2:
