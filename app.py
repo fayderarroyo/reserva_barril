@@ -131,26 +131,68 @@ with st.sidebar:
 
 USER_NAMES = list(USERS.keys())
 
-# Tabs
-tab1, tab2, tab3, tab4 = st.tabs(["📅 Reservar & Mis Reservas", "📆 Calendario", "📜 Reglamento", "📋 Historial"])
+# --- UNIFIED DASHBOARD LAYOUT ---
 
-# --- TAB 1: RESERVAR & MIS RESERVAS (SIDE BY SIDE) ---
-with tab1:
-    # Split into two columns
-    col_left, col_right = st.columns(2)
+# Create two main columns
+main_col1, main_col2 = st.columns([1, 1])
+
+# --- LEFT COLUMN: CALENDAR & STATUS ---
+with main_col1:
+    st.header("📆 Calendario de Reservas")
     
-    # LEFT COLUMN: RESERVAR
-    with col_left:
-        st.header("Hacer una Reserva")
+    reservations = utils.get_all_reservations()
+    
+    # Custom Calendar Visualization
+    # Create a dataframe for the calendar
+    if reservations:
+        df = pd.DataFrame(reservations)
+        df['date'] = pd.to_datetime(df['date']).dt.date
+        df = df.sort_values('date')
         
-        col1, col2 = st.columns(2)
-        with col1:
-            # Auto-select logged in user
-            st.info(f"👤 Reservando como: **{st.session_state['username']}**")
-            selected_user = st.session_state['username']
-        with col2:
-            # Min date is today
-            selected_date = st.date_input("Selecciona la fecha", min_value=date.today())
+        # Highlight today
+        today = date.today()
+        
+        # Display as a styled table
+        st.markdown("### Próximas Reservas")
+        
+        # Filter for future reservations only
+        future_reservations = df[df['date'] >= today]
+        
+        if not future_reservations.empty:
+            st.dataframe(
+                future_reservations[['date', 'user']].rename(columns={'date': 'Fecha', 'user': 'Reservado por'}),
+                use_container_width=True,
+                hide_index=True,
+                height=400
+            )
+        else:
+            st.info("No hay reservas futuras.")
+    else:
+        st.info("No hay reservas registradas.")
+
+    # Rules Expander
+    with st.expander("📜 Ver Reglamento"):
+        st.markdown("""
+        ### Reglamento de Uso
+        1. **Duración:** Las reservas son por 24 horas (10:00 AM a 10:00 AM del día siguiente).
+        2. **Límite:** Solo puedes tener **una reserva activa** a la vez.
+        3. **Responsable:** Quien reserva es responsable del barril y sus accesorios.
+        4. **Limpieza:** El barril debe entregarse limpio y seco.
+        5. **Inventario:** Verificar el inventario al recibir y entregar.
+        6. **Uso:** Prohibido prestar el barril a terceros fuera del grupo.
+        """)
+
+# --- RIGHT COLUMN: ACTIONS (RESERVE & MY RESERVATIONS) ---
+with main_col2:
+    # SECTION 1: MAKE RESERVATION
+    st.markdown("### 📝 Hacer una Reserva")
+    with st.container(border=True):
+        # Auto-select logged in user
+        st.info(f"👤 Reservando como: **{st.session_state['username']}**")
+        selected_user = st.session_state['username']
+        
+        # Min date is today
+        selected_date = st.date_input("Selecciona la fecha", min_value=date.today())
         
         # Email notification option
         send_email = st.checkbox("📧 Enviar notificación por email", value=True, key="send_email_reserve")
@@ -181,12 +223,13 @@ with tab1:
                         st.warning(f"⚠️ No se pudo enviar email: {e}")
             else:
                 st.error(f"❌ {message}")
-    
-    # RIGHT COLUMN: MIS RESERVAS
-    with col_right:
-        st.header("Mis Reservas Activas")
-        
-        # Show only logged in user's reservations by default
+
+    st.markdown("---")
+
+    # SECTION 2: MY ACTIVE RESERVATIONS
+    st.markdown("### 🎫 Mis Reservas Activas")
+    with st.container(border=True):
+        # Show only logged in user's reservations
         current_user = st.session_state['username']
         
         # Email notification option for cancellations
@@ -203,125 +246,49 @@ with tab1:
             st.info("No tienes reservas registradas.")
         else:
             for res in user_reservations:
-                with st.container():
-                    col_res1, col_res2 = st.columns([3, 1])
-                    with col_res1:
-                        st.write(f"📅 **Fecha:** {res['date']}")
-                    with col_res2:
-                        # Unique key for button using date and user
-                        if st.button("Cancelar", key=f"cancel_{res['date']}_{res['user']}"):
-                            # No password needed
-                            success, msg = utils.cancel_reservation(res['user'], res['date'])
-                            if success:
-                                st.success(msg)
-                                # Try to send cancellation email (optional)
-                                if send_cancel_email:
-                                    try:
-                                        email_notifications.send_reservation_email(
-                                            res['user'], 
-                                            USERS[res['user']], 
-                                            res['date'], 
-                                            "cancelled"
-                                        )
-                                        email_notifications.send_group_notification(
-                                            USERS, 
-                                            res['date'], 
-                                            res['user'], 
-                                            "cancelled"
-                                        )
-                                        st.info("📧 Email de cancelación enviado")
-                                    except Exception as e:
-                                        st.warning(f"⚠️ No se pudo enviar email: {e}")
-                                st.rerun()
-                            else:
-                                st.error(msg)
+                col_res1, col_res2 = st.columns([3, 1])
+                with col_res1:
+                    st.write(f"📅 **{res['date']}**")
+                with col_res2:
+                    # Unique key for button using date and user
+                    if st.button("Cancelar", key=f"cancel_{res['date']}_{res['user']}"):
+                        # No password needed
+                        success, msg = utils.cancel_reservation(res['user'], res['date'])
+                        if success:
+                            st.success(msg)
+                            # Try to send cancellation email (optional)
+                            if send_cancel_email:
+                                try:
+                                    email_notifications.send_reservation_email(
+                                        res['user'], 
+                                        USERS[res['user']], 
+                                        res['date'], 
+                                        "cancelled"
+                                    )
+                                    email_notifications.send_group_notification(
+                                        USERS, 
+                                        res['date'], 
+                                        res['user'], 
+                                        "cancelled"
+                                    )
+                                    st.info("📧 Email de cancelación enviado")
+                                except Exception as e:
+                                    st.warning(f"⚠️ No se pudo enviar email: {e}")
+                            st.rerun()
+                        else:
+                            st.error(msg)
+                st.divider()
 
-# --- TAB 2: CALENDARIO ---
-with tab2:
-    st.header("Disponibilidad")
-    
-    reservations = utils.get_all_reservations()
-    if reservations:
-        df = pd.DataFrame(reservations)
-        df['date'] = pd.to_datetime(df['date']).dt.date
-        df = df[['date', 'user']]
-        df.columns = ['Fecha', 'Reservado por']
-        st.dataframe(df, use_container_width=True, hide_index=True)
-        
-        # Calendar visual (simple list for now, or use a calendar component if installed)
-        # For simplicity in standard streamlit, a dataframe or table is best.
-    else:
-        st.info("No hay reservas futuras.")
-
-# --- TAB 3: REGLAMENTO ---
-with tab3:
-    st.header("🔥 Reglamento de uso del Barril “Los Rehabilitados”")
-    st.markdown("""
-    **1. Reservas**
-    *   Las reservas se hacen únicamente a través de esta aplicación.
-    *   Una reserva equivale a 24 horas (10:00 am – 10:00 am dia siguiente).
-    *   **Solo se permite una reserva activa por persona a la vez.**
-
-    **2. Modificaciones y cancelaciones**
-    *   Solo el responsable que hizo la reserva puede modificar o cancelar su turno.
-    *   Al cancelar, el evento se eliminará automáticamente.
-    *   *Se sugiere que las cancelaciones de último momento se informen por WhatsApp.*
-
-    **3. Entrega y condiciones de uso**
-    *   El Barril debe entregarse **limpio, seco y sin residuos**.
-    *   El barril debe recogerlo la persona que hizo la reserva.
-    *   **Inventario:** 1 kit de 5 pinchos, 1 accesorio para pollo, 1 choricera pequeña, 1 multiusos de 3 puestos, 1 barril de 28 lb con todos sus elementos.
-    *   En caso de daño o pérdida, el responsable asume el costo.
-
-    **4. Garantía y mantenimiento**
-    *   No usar gasolina ni químicos inflamables.
-    *   Solo debe usarse en lugares ventilados o exteriores.
-
-    **5. Respeto por el grupo**
-    *   Todos los miembros deben respetar el orden de las reservas.
-    *   **Prohibido el préstamo a terceras personas.**
-    """)
-
-# --- TAB 4: HISTORIAL ---
-with tab4:
-    st.header("📋 Historial de Cambios")
-    
+# --- HISTORIAL (EXPANDER AT BOTTOM) ---
+with st.expander("📋 Ver Historial de Cambios"):
     history = utils.get_history()
-    
-    if not history:
-        st.info("No hay cambios registrados aún.")
-    else:
-        st.write(f"**Total de cambios:** {len(history)}")
-        
+    if history:
         for entry in history:
-            # Parse timestamp
-            try:
-                timestamp = datetime.fromisoformat(entry['timestamp'])
-                time_str = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-            except:
-                time_str = entry['timestamp']
-            
-            # Create colored container based on action
-            if entry['action'] == 'created':
-                icon = "✅"
-                action_text = "Reservó"
-                color = "#28a745"  # Green
-            else:
-                icon = "❌"
-                action_text = "Canceló"
-                color = "#dc3545"  # Red
-            
-            # Display entry
-            st.markdown(f"""
-            <div style="
-                padding: 10px; 
-                margin: 5px 0; 
-                border-left: 4px solid {color}; 
-                background-color: rgba(255,255,255,0.05);
-                border-radius: 4px;
-            ">
-                <strong>{icon} {entry['user']}</strong> {action_text} el <strong>{entry['date']}</strong><br>
-                <small style="color: #888;">🕐 {time_str}</small>
-            </div>
-            """, unsafe_allow_html=True)
+            icon = "🟢" if entry['action'] == "created" else "🔴"
+            action_text = "Reserva creada" if entry['action'] == "created" else "Reserva cancelada"
+            st.markdown(f"{icon} **{entry['date']}** - {action_text} por **{entry['user']}** ({entry['timestamp']})")
+    else:
+        st.info("No hay historial disponible.")
+        
+# (Tabs removed in favor of unified layout)
 
