@@ -42,23 +42,18 @@ with col_title1:
     st.title("🍖 Reserva Barril 'Los Rehabilitados'")
     st.markdown("### Sistema de Gestión de Reservas")
 with col_title2:
-    # 8-image collage in 2 rows of 4
-    if all(os.path.exists(f'assets/collage_{i}.png') for i in range(1, 9)):
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.image('assets/collage_1.png', use_column_width=True)
-            st.image('assets/collage_5.png', use_column_width=True)
-        with col2:
-            st.image('assets/collage_2.png', use_column_width=True)
-            st.image('assets/collage_6.png', use_column_width=True)
-        with col3:
-            st.image('assets/collage_3.png', use_column_width=True)
-            st.image('assets/collage_7.png', use_column_width=True)
-        with col4:
-            st.image('assets/collage_4.png', use_column_width=True)
-            st.image('assets/collage_8.png', use_column_width=True)
+    # Display selected images
+    if os.path.exists('assets/new_hero.png'):
+        st.image('assets/new_hero.png', use_container_width=True)
+    
+    col_imgs = st.columns(2)
+    with col_imgs[0]:
+        if os.path.exists('assets/hero.png'):
+            st.image('assets/hero.png', use_container_width=True)
+    with col_imgs[1]:
+        if os.path.exists('assets/collage_2.png'):
+            st.image('assets/collage_2.png', use_container_width=True)
 
-# Users List with emails
 # Users List with emails
 USERS = {
     "Daniel Sierra": "dmsierra10@gmail.com",
