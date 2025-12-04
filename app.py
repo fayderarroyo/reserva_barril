@@ -5,6 +5,7 @@ import utils
 import os
 import email_notifications
 
+# Version: 2.0 - Google Sheets + Email Checkboxes
 # Password for operations
 OPERATION_PASSWORD = "pellejo"
 
