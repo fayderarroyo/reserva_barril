@@ -38,6 +38,7 @@ def send_reservation_email(user_name, user_email, reservation_date, action="crea
     
     # Skip if email not configured
     if not SENDER_EMAIL or not SENDER_PASSWORD:
+        print("⚠️ Email not configured - skipping notification")
         return False
     
     try:
@@ -85,15 +86,17 @@ Los Rehabilitados
         msg.attach(MIMEText(body, 'plain'))
         
         # Send email
+        print(f"📧 Intentando enviar email a {user_email}...")
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()
             server.login(SENDER_EMAIL, SENDER_PASSWORD)
             server.send_message(msg)
         
+        print(f"✅ Email enviado exitosamente a {user_email}")
         return True
         
     except Exception as e:
-        print(f"Error sending email: {e}")
+        print(f"❌ Error sending email: {e}")
         return False
 
 def send_group_notification(all_users_dict, reservation_date, user_name, action="created"):
