@@ -71,7 +71,8 @@ function App() {
     const templateParams = {
       user_name: user,
       action: actionType === 'create' ? 'ha reservado el barril' : 'ha cancelado su reserva',
-      date: resDate
+      date: resDate,
+      to_email: "fayderarroyo@gmail.com, dmsierra10@gmail.com, shirlymadiedo@gmail.com, rinamarmolejo9@gmail.com, mamoca17@msn.com, lpertuz17@gmail.com, kevin9624@outlook.com"
     };
 
     emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, { publicKey: EMAILJS_PUBLIC_KEY })
