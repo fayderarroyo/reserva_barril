@@ -208,7 +208,7 @@ function App() {
 
           <div className="card">
             <div className="glass-panel" style={{height: '100%'}}>
-              <img src="/grill_accent_light.jpg" alt="Grill Accent" className="hero-image-small" />
+              <img src={`${import.meta.env.BASE_URL}grill_accent_light.jpg`} alt="Grill Accent" className="hero-image-small" />
               <h3 style={{fontSize: '22px'}}>📆 Calendario de Reservas</h3>
               <p style={{color: 'var(--text-secondary)', marginTop: '8px', marginBottom: '20px'}}>Próximos eventos en vivo.</p>
               <div>
