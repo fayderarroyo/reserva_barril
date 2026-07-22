@@ -1,96 +1,16 @@
-# 🍖 Reserva Barril "Los Rehabilitados"
+# React + Vite
 
-Sistema de gestión de reservas para el barril compartido del grupo.
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
-## 🚀 Inicio Rápido
+Currently, two official plugins are available:
 
-### Instalación
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-```bash
-cd reserva-barril
-pip install -r requirements.txt
-```
+## React Compiler
 
-### Ejecutar la Aplicación
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-```bash
-streamlit run app.py
-```
+## Expanding the Oxlint configuration
 
-La aplicación se abrirá en tu navegador en `http://localhost:8501`
-
-## 👥 Usuarios Registrados
-
-- Daniel Sierra
-- Shirly Madiedo
-- Fayder Arroyo
-- Rina Marmolejo
-- Maria Monica Rodriguez
-- Lina Pertuz
-- Kevin
-
-## 📋 Funcionalidades
-
-### ✅ Hacer Reservas
-- Selecciona tu nombre
-- Elige la fecha deseada
-- Confirma la reserva
-- Solo una reserva activa por persona
-
-### 📅 Ver Calendario
-- Consulta todas las reservas
-- Verifica disponibilidad
-- Planifica con anticipación
-
-### ❌ Cancelar Reservas
-- Solo puedes cancelar tus propias reservas
-- La fecha queda disponible inmediatamente
-- Se recomienda avisar al grupo por WhatsApp
-
-### 📜 Reglamento
-- Consulta las reglas completas
-- Inventario de accesorios
-- Condiciones de uso
-
-## 🔔 Notificaciones (Opcional)
-
-El sistema incluye soporte para notificaciones por email. Ver [EMAIL_CONFIG.md](EMAIL_CONFIG.md) para instrucciones de configuración.
-
-## 📁 Estructura del Proyecto
-
-```
-reserva-barril/
-├── app.py                      # Aplicación principal
-├── utils.py                    # Lógica de reservas
-├── email_notifications.py      # Sistema de emails (opcional)
-├── reservations.json           # Base de datos
-├── assets/                     # Imágenes
-│   ├── background.png
-│   └── hero.png
-├── requirements.txt
-├── EMAIL_CONFIG.md
-└── README.md
-```
-
-## 🎨 Características
-
-- ✨ Interfaz moderna con imágenes temáticas
-- 🎯 Validación automática de reglas
-- 💾 Almacenamiento persistente
-- 📧 Notificaciones por email (opcional)
-- 🌙 Tema oscuro elegante
-
-## 🛠️ Tecnologías
-
-- **Python 3.x**
-- **Streamlit** - Framework web
-- **Pandas** - Manejo de datos
-- **JSON** - Almacenamiento
-
-## 📞 Soporte
-
-Para problemas o sugerencias, contacta a cualquier miembro del grupo.
-
----
-
-**Los Rehabilitados** 🍖
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
