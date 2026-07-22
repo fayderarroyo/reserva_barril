@@ -16,8 +16,8 @@ const USERS = [
 
 // Reemplaza estos valores con los de tu cuenta de EmailJS
 const EMAILJS_SERVICE_ID = "service_kxjwro8";
-const EMAILJS_TEMPLATE_ID = "tu_template_id_aqui"; // Necesitas crear un template en EmailJS
-const EMAILJS_PUBLIC_KEY = "tu_public_key_aqui"; // Está en tu cuenta de EmailJS (Account)
+const EMAILJS_TEMPLATE_ID = "template_bsca2ya"; // Necesitas crear un template en EmailJS
+const EMAILJS_PUBLIC_KEY = "tDS7fOJ4BtNDwOPwX"; // Está en tu cuenta de EmailJS (Account)
 
 function App() {
   const [user, setUser] = useState(localStorage.getItem('currentUser') || null);
