@@ -16,8 +16,10 @@ const USERS = [
 
 // Reemplaza estos valores con los de tu cuenta de EmailJS
 const EMAILJS_SERVICE_ID = "service_kxjwro8";
-const EMAILJS_TEMPLATE_ID = "template_bsca2ya"; // Necesitas crear un template en EmailJS
-const EMAILJS_PUBLIC_KEY = "tDS7fOJ4BtNDwOPwX"; // Está en tu cuenta de EmailJS (Account)
+const EMAILJS_TEMPLATE_ID = "template_bsca2ya";
+const EMAILJS_PUBLIC_KEY = "tDS7fOJ4BtNDwOPwX";
+
+emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
 function App() {
   const [user, setUser] = useState(localStorage.getItem('currentUser') || null);
@@ -64,8 +66,7 @@ function App() {
   };
 
   const notifyByEmail = (actionType, resDate) => {
-    // Si no están configuradas las llaves de EmailJS, no intentar enviar
-    if (EMAILJS_TEMPLATE_ID === "tu_template_id_aqui") return;
+    if (!EMAILJS_TEMPLATE_ID || EMAILJS_TEMPLATE_ID === "tu_template_id_aqui") return;
 
     const templateParams = {
       user_name: user,
@@ -73,9 +74,14 @@ function App() {
       date: resDate
     };
 
-    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_PUBLIC_KEY)
-      .then((result) => console.log('Email enviado:', result.text))
-      .catch((error) => console.error('Error enviando email:', error.text));
+    emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, { publicKey: EMAILJS_PUBLIC_KEY })
+      .then((result) => {
+        console.log('Email enviado con éxito:', result.text);
+      })
+      .catch((error) => {
+        console.error('Error al enviar email:', error);
+        alert(`Aviso EmailJS: No se pudo enviar el correo (${error?.text || error?.message || 'Error desconocido'}). Revisa tu Service ID o la plantilla.`);
+      });
   };
 
   const handleReserve = async (e) => {
